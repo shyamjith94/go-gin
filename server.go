@@ -12,11 +12,14 @@ func main() {
 	server.Use(gin.Recovery())
 	server.Use(gin.Logger())
 
+	// middleware
+
 	// db connection
 	configuration.ConnectDataBase()
 
 	// routes
 	home.HomeRoute(server)
+	user.SignUpAndSignInRoute(server)
 	user.UserRoute(server)
 
 	// run server

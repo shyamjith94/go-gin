@@ -13,12 +13,17 @@ import (
 func ConnectDataBase() *mongo.Client {
 	client, err := mongo.NewClient(options.Client().ApplyURI(GetMongoUrl()))
 	if err != nil {
+		fmt.Println("Error connect to Data base ...")
+
 		log.Fatal(err)
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	err = client.Connect(ctx)
+	defer cancel()
 
 	if err != nil {
+		fmt.Println("Error connect to Data base ...")
+
 		log.Fatal(err)
 	}
 
