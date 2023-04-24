@@ -4,11 +4,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shyamjith94/go-gin/models"
 	"github.com/shyamjith94/go-gin/response"
 )
 
 func Autherization() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var user models.Users
 		clientToken := c.Request.Header.Get("token")
 		if clientToken == "" {
 			c.JSON(http.StatusBadRequest, response.Response{Status: http.StatusBadRequest,
@@ -23,12 +25,13 @@ func Autherization() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		c.Set("UserId", claims.UserId)
-		c.Set("UserName", claims.UserName)
-		c.Set("firstname", claims.FirstName)
-		c.Set("FirstName", claims.LastName)
-		c.Set("Email", claims.Email)
-		c.Set("Location", claims.Location)
+		user.UserId = claims.UserId
+		user.UserName = claims.UserName
+		user.FirstName = claims.FirstName
+		user.LastName = claims.LastName
+		user.Email = claims.Email
+		user.Location = claims.Location
+		c.Set("User", &user)
 		c.Next()
 	}
 }

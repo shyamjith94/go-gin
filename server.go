@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shyamjith94/go-gin/configuration"
 	home "github.com/shyamjith94/go-gin/homepage"
-	"github.com/shyamjith94/go-gin/user"
+	"github.com/shyamjith94/go-gin/router"
 )
 
 func main() {
@@ -19,8 +19,9 @@ func main() {
 
 	// routes
 	home.HomeRoute(server)
-	user.SignUpAndSignInRoute(server)
-	user.UserRoute(server)
+	router.SignUpAndSignInRoute(server)
+	router.UserRoute(server)
+	router.ProductRoute(server)
 
 	// run server
 	server.Run(":8000")

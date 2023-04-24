@@ -1,4 +1,4 @@
-package user
+package controller
 
 import (
 	"context"
@@ -6,19 +6,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator"
-	"github.com/shyamjith94/go-gin/configuration"
+	"github.com/shyamjith94/go-gin/collections"
 	"github.com/shyamjith94/go-gin/constants"
+	"github.com/shyamjith94/go-gin/models"
 	"github.com/shyamjith94/go-gin/response"
 	"github.com/shyamjith94/go-gin/security"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-var userCollection *mongo.Collection = configuration.GetCollection(configuration.DbClient, "users")
-var validate = validator.New()
 
 // func CreateUser() gin.HandlerFunc {
 // 	return func(c *gin.Context) {
@@ -37,13 +33,13 @@ var validate = validator.New()
 
 // creating new user
 func CreateUser(c *gin.Context) {
-	var user Users
+	var user models.Users
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	// check body has data
 	if err := c.BindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, response.Response{Status: http.StatusBadRequest,
-			Message: "Body Has No Data", Data: nil})
+			Message: constants.NoBody, Data: nil})
 		return
 	}
 	// validate json
@@ -65,7 +61,7 @@ func CreateUser(c *gin.Context) {
 	user.UserId = user.Id.Hex()
 	user.CreatedAt = time.Now().Local()
 	user.UpdatedAt = time.Now().Local()
-	_, err = userCollection.InsertOne(ctx, user)
+	_, err = collections.UserCollection.InsertOne(ctx, &user)
 	if err != nil {
 		c.JSON(http.StatusNotImplemented, response.Response{Status: http.StatusNotImplemented,
 			Message: err.Error(), Data: nil})
@@ -78,13 +74,13 @@ func CreateUser(c *gin.Context) {
 
 // get all user
 func GetAllUsers(c *gin.Context) {
-	var users []Users
+	var users []models.Users
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// ignore password field
 	opts := options.Find().SetProjection(bson.M{"password": 0})
-	result, err := userCollection.Find(ctx, bson.M{}, opts)
+	result, err := collections.UserCollection.Find(ctx, bson.M{}, opts)
 	if err != nil {
 		c.JSON(http.StatusNoContent, response.Response{Status: http.StatusNoContent,
 			Message: err.Error(), Data: nil})
@@ -92,7 +88,7 @@ func GetAllUsers(c *gin.Context) {
 	}
 	defer result.Close(ctx)
 	for result.Next(ctx) {
-		var user Users
+		var user models.Users
 		if err := result.Decode(&user); err != nil {
 			c.JSON(http.StatusNoContent, response.Response{Status: http.StatusNoContent,
 				Message: err.Error(), Data: nil})
@@ -106,14 +102,14 @@ func GetAllUsers(c *gin.Context) {
 
 // Get single user
 func GetUser(c *gin.Context) {
-	var user Users
+	var user models.Users
 	userId := c.Param("userId")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	opts := options.FindOne().SetProjection(bson.M{"password": 0})
 	// objId, _ := primitive.ObjectIDFromHex(userId)
-	err := userCollection.FindOne(ctx, bson.M{"userid": userId}, opts).Decode(&user)
+	err := collections.UserCollection.FindOne(ctx, bson.M{"userid": userId}, opts).Decode(&user)
 	if err != nil {
 		c.JSON(http.StatusNoContent, response.Response{Status: http.StatusNoContent, Message: err.Error(),
 			Data: nil})
@@ -126,8 +122,8 @@ func GetUser(c *gin.Context) {
 
 // Login user
 func LoginUser(c *gin.Context) {
-	var user Users
-	var loginDetails Login
+	var user models.Users
+	var loginDetails models.Login
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -136,7 +132,7 @@ func LoginUser(c *gin.Context) {
 	// check body has data
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.Response{Status: http.StatusBadRequest,
-			Message: "Body Has No Data", Data: nil})
+			Message: constants.NoBody, Data: nil})
 		return
 	}
 	// validate json
@@ -146,7 +142,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 	//  get record from db based name
-	err = userCollection.FindOne(ctx, bson.M{"username": loginDetails.UserName}).Decode(&user)
+	err = collections.UserCollection.FindOne(ctx, bson.M{"username": loginDetails.UserName}).Decode(&user)
 	if err != nil {
 		c.JSON(http.StatusNoContent, response.Response{Status: http.StatusNoContent,
 			Message: err.Error(), Data: nil})
