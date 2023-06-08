@@ -22,6 +22,7 @@ func main() {
 	router.SignUpAndSignInRoute(server)
 	router.UserRoute(server)
 	router.ProductRoute(server)
+	router.CategoryRoute(server)
 
 	// run server
 	server.Run(":8000")

@@ -7,7 +7,7 @@ import (
 )
 
 type Users struct {
-	Id           primitive.ObjectID `bson:"_id"`
+	Id           primitive.ObjectID `bson:"_id" json:"-"`
 	UserId       string             `json:"userid,omitempty"`
 	UserName     string             `json:"username,omitempty" validate:"required"`
 	FirstName    string             `json:"firstname,omitempty" validate:"required"`
@@ -18,11 +18,16 @@ type Users struct {
 	Password     string             `json:"password,omitempty" validate:"required"`
 	CreatedAt    time.Time          `json:"created_at,omitempty"`
 	UpdatedAt    time.Time          `json:"updated_at,omitempty"`
-	Token        string             `json:"token,omitempty"`
+	AccessToken  string             `json:"access_token,omitempty"`
 	RefreshToken string             `json:"refresh_token,omitempty"`
 }
 
 type Login struct {
 	UserName string `json:"username,omitempty" validate:"required"`
 	Password string `json:"password,omitempty" validate:"required"`
+}
+
+type Token struct {
+	AccessToken  string `json:"token,omitempty"`
+	RefreshToken string `json:"refresh_token,omitempty" validate:"required"`
 }

@@ -158,7 +158,7 @@ func LoginUser(c *gin.Context) {
 	// generate token
 	token, refreshToken, err := security.GenerteAllTokens(user.UserId, user.UserName, user.FirstName, user.LastName,
 		user.Email, user.Phone, user.Location)
-	user.Token = token
+	user.AccessToken = token
 	user.RefreshToken = refreshToken
 	user.Password = ""
 	if err != nil {
@@ -170,4 +170,30 @@ func LoginUser(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, response.Response{Status: http.StatusOK,
 		Message: constants.Success, Data: &user})
+}
+
+// genrate new token from refresh token
+func GenerateNewToken(c *gin.Context) {
+	var token models.Token
+	err := c.BindJSON(&token)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.Response{Status: http.StatusBadRequest,
+			Message: constants.NoBody, Data: nil})
+		return
+	}
+	if validatorErr := validate.Struct(&token); validatorErr != nil {
+		c.JSON(http.StatusBadRequest, response.Response{Status: http.StatusBadRequest,
+			Message: validatorErr.Error(), Data: nil})
+		return
+	}
+	accessToken, refreshToken, err := security.GenerateTokenFromRefreshToken(token.RefreshToken)
+	if err != nil {
+		c.JSON(http.StatusFailedDependency, response.Response{Status: http.StatusFailedDependency,
+			Message: err.Error(), Data: nil})
+		return
+	}
+	token.RefreshToken = refreshToken
+	token.AccessToken = accessToken
+	c.JSON(http.StatusOK, response.Response{Status: http.StatusOK,
+		Message: constants.Success, Data: &token})
 }

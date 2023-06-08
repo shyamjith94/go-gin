@@ -7,7 +7,7 @@ import (
 	"github.com/shyamjith94/go-gin/models"
 )
 
-func GetUserId(c *gin.Context) (user *models.Users, err error) {
+func GetUser(c *gin.Context) (user *models.Users, err error) {
 	if _, found := c.Keys["User"]; found {
 		return c.Keys["User"].(*models.Users), nil
 	}

@@ -7,3 +7,4 @@ import (
 
 var UserCollection *mongo.Collection = configuration.GetCollection(configuration.DbClient, "users")
 var ProductCollection *mongo.Collection = configuration.GetCollection(configuration.DbClient, "Product")
+var CategoryCollection *mongo.Collection = configuration.GetCollection(configuration.DbClient, "Category")

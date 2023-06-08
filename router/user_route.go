@@ -13,6 +13,7 @@ func UserRoute(route *gin.Engine) {
 	// route
 	route.GET("/users", controller.GetAllUsers)
 	route.GET("/user/:userId", controller.GetUser)
+	route.POST("/user/newtoken", controller.GenerateNewToken)
 }
 
 func SignUpAndSignInRoute(route *gin.Engine) {

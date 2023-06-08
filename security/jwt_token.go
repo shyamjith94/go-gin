@@ -1,12 +1,18 @@
 package security
 
 import (
+	"context"
+	"errors"
 	"log"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/shyamjith94/go-gin/collections"
 	"github.com/shyamjith94/go-gin/configuration"
 	"github.com/shyamjith94/go-gin/constants"
+	"github.com/shyamjith94/go-gin/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type SignedDetails struct {
@@ -20,6 +26,7 @@ type SignedDetails struct {
 	jwt.StandardClaims
 }
 
+// generate all tokens
 func GenerteAllTokens(id string, userName string, firstName string, lastName string,
 	email string, phone int, location string) (signedToken string, signedRefreshToken string, err error) {
 	claims := &SignedDetails{
@@ -34,6 +41,7 @@ func GenerteAllTokens(id string, userName string, firstName string, lastName str
 	}
 
 	refreshClainms := &SignedDetails{
+		UserId:         id,
 		StandardClaims: jwt.StandardClaims{ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(constants.JwtRefrshTokenTimeOut)).Unix()},
 	}
 
@@ -50,6 +58,27 @@ func GenerteAllTokens(id string, userName string, firstName string, lastName str
 	return token, refreshToken, err
 }
 
+// generate new token using reffresh token
+func GenerateTokenFromRefreshToken(siginedToken string) (signedToken string, signedRefreshToken string, err error) {
+	claims, msg := ValidateToken(siginedToken)
+	if msg != "" {
+		return "", "", errors.New(msg)
+	}
+	var user models.Users
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	opts := options.FindOne().SetProjection(bson.M{"password": 0})
+	err = collections.UserCollection.FindOne(ctx, bson.M{"userid": claims.UserId}, opts).Decode(&user)
+	if err != nil {
+		return "", "", errors.New("not found user")
+	}
+	token, refreshToken, err := GenerteAllTokens(user.UserId, user.UserName, user.FirstName,
+		user.LastName, user.Email, user.Phone, user.Location)
+
+	return token, refreshToken, err
+}
+
+// validate token
 func ValidateToken(signedToken string) (claims *SignedDetails, message string) {
 	token, err := jwt.ParseWithClaims(signedToken, &SignedDetails{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(configuration.GetJwtKey()), nil
